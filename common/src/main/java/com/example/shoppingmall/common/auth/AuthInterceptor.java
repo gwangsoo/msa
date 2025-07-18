@@ -2,12 +2,17 @@ package com.example.shoppingmall.common.auth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
@@ -19,11 +24,15 @@ public class AuthInterceptor implements HandlerInterceptor {
             RequiredRole requiredRole = handlerMethod.getMethodAnnotation(RequiredRole.class);
 
             if (requiredRole != null) {
-                // 1. Get user roles from JWT token (e.g., from SecurityContextHolder)
-                // This is a placeholder. Actual implementation will depend on Spring Security setup.
-                List<String> userRoles = getUserRolesFromToken();
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-                // 2. Check if the user has any of the required roles
+                if (authentication == null || !authentication.isAuthenticated()) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                    return false;
+                }
+
+                List<String> userRoles = getUserRolesFromAuthentication(authentication);
+
                 boolean hasPermission = Arrays.stream(requiredRole.value())
                                               .anyMatch(userRoles::contains);
 
@@ -36,10 +45,12 @@ public class AuthInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    private List<String> getUserRolesFromToken() {
-        // Placeholder: In a real application, you would extract this from the SecurityContext
-        // which is populated by Spring Security based on the JWT token from Keycloak.
-        // For now, returning a dummy list.
-        return List.of("USER"); // or "ADMIN", "GUEST", etc.
+    private List<String> getUserRolesFromAuthentication(Authentication authentication) {
+        // Keycloak roles are often prefixed with 'ROLE_'. We might need to adjust this based on the actual token content.
+        // For now, we assume the authority string is the role name.
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role)
+                .collect(Collectors.toList());
     }
 }
