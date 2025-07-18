@@ -1,0 +1,16 @@
+rootProject.name = 'shopping-mall-msa'
+
+include 'common'
+include 'gateway'
+
+include 'services:user-service'
+include 'services:product-service'
+include 'services:order-service'
+include 'services:payment-service'
+include 'services:delivery-service'
+include 'services:notification-service'
+include 'services:batch-service'
+
+include 'bff:mobile-bff'
+include 'bff:web-bff'
+include 'bff:admin-bff'

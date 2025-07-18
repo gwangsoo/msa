@@ -1,0 +1,50 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # User Service
+        - id: user-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users/**
+
+        # Product Service
+        - id: product-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/products/**
+
+        # Order Service
+        - id: order-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/orders/**
+
+        # Mobile BFF
+        - id: mobile-bff
+          uri: http://localhost:9001
+          predicates:
+            - Path=/mobile/**
+
+        # Web BFF
+        - id: web-bff
+          uri: http://localhost:9002
+          predicates:
+            - Path=/web/**
+
+        # Admin BFF
+        - id: admin-bff
+          uri: http://localhost:9003
+          predicates:
+            - Path=/admin/**
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/shopping-mall
